@@ -631,8 +631,7 @@ IMPORTANT RULES:
   if (data.error) throw new Error('API error: ' + JSON.stringify(data.error));
 
   const text = data.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('') || '';
-  const clean = text.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```\s*$/i, '').trim();
-
+  const clean = text.replace(/[\s\S]*?({[\s\S]*})/,'$1').trim();
   let parsed;
   try { parsed = JSON.parse(clean); }
   catch(e) { throw new Error('JSON parse failed. Response was: ' + text.slice(0, 500)); }
