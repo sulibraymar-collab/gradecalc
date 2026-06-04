@@ -635,7 +635,11 @@ IMPORTANT RULES:
 
   let parsed;
   try { parsed = JSON.parse(clean); }
-  catch(e) { throw new Error('JSON parse failed. Response was: ' + text.slice(0, 500)); }
+  catch(e) { 
+  const m = clean.match(/{[\s\S]*}/);
+  if (m) { try { parsed = JSON.parse(m[0]); } catch(e2) {} }
+  if (!parsed) throw new Error('JSON parse failed. Response was: ' + clean.slice(0, 500)); 
+}
 
   if (!parsed.semesters || !Array.isArray(parsed.semesters)) {
     throw new Error('Unexpected structure: ' + JSON.stringify(parsed).slice(0, 300));
