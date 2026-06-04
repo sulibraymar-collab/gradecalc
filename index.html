@@ -627,7 +627,7 @@ IMPORTANT RULES:
   }
 
   let data;
-  try { data = JSON.parse(responseText); } catch(e) { throw new Error('Response not JSON: ' + responseText.slice(0, 300)); }
+  try { data = JSON.parse(responseText); } catch(e) { throw new Error('Response not JSON: ' + responseText.slice(0, 800)); }
   if (data.error) throw new Error('API error: ' + JSON.stringify(data.error));
 
   const text = data.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('') || '';
