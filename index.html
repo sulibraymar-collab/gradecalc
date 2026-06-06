@@ -1,0 +1,1711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CTU Grade Calculator</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f4f6f9;
+    --surface: #ffffff;
+    --surface2: #f8fafc;
+    --border: #e2e8f0;
+    --accent: #1d4ed8;
+    --accent2: #2563eb;
+    --gold: #d97706;
+    --gold2: #f59e0b;
+    --green: #059669;
+    --red: #dc2626;
+    --text: #0f172a;
+    --muted: #64748b;
+    --summa: #7c3aed;
+    --magna: #1d4ed8;
+    --cum: #059669;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(59,130,246,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(59,130,246,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .container { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem; position: relative; z-index: 1; }
+
+  /* Header */
+  header { text-align: center; margin-bottom: 3rem; padding-bottom: 2rem; border-bottom: 1px solid var(--border); }
+  .school-badge {
+    display: inline-block; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 4px; padding: 0.25rem 0.75rem; font-size: 0.65rem; letter-spacing: 0.15em;
+    color: var(--accent2); text-transform: uppercase; margin-bottom: 1rem;
+  }
+  h1 {
+    font-family: 'Inter', sans-serif; font-size: clamp(1.8rem, 5vw, 3rem); font-weight: 800; line-height: 1.1;
+    background: linear-gradient(135deg, #e2e8f0, #60a5fa, #a78bfa);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 0.5rem;
+  }
+  .subtitle { color: var(--muted); font-size: 0.8rem; letter-spacing: 0.05em; }
+
+  /* ── UPLOAD SECTION ── */
+  .upload-section {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+    padding: 2.5rem 2rem; text-align: center; position: relative; overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .upload-section::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--summa));
+  }
+  .upload-section.drag-over { border-color: var(--accent); background: rgba(59,130,246,0.05); }
+
+  .upload-icon { font-size: 3rem; margin-bottom: 1rem; }
+  .upload-title { font-family: 'Inter', sans-serif; font-size: 1.4rem; font-weight: 800; margin-bottom: 0.5rem; letter-spacing: -0.02em; }
+  .upload-sub { color: var(--muted); font-size: 0.75rem; margin-bottom: 1.5rem; line-height: 1.6; }
+
+  .upload-btn {
+    display: inline-block; background: var(--accent); color: white; border: none;
+    border-radius: 8px; padding: 0.75rem 2rem; font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem; cursor: pointer; transition: all 0.2s; letter-spacing: 0.05em;
+  }
+  .upload-btn:hover { background: #2563eb; transform: translateY(-1px); }
+  #file-input { display: none; }
+
+  .upload-formats {
+    display: flex; justify-content: center; gap: 0.5rem; margin-top: 1.25rem; flex-wrap: wrap;
+  }
+  .fmt-chip {
+    background: var(--surface2); border: 1px solid var(--border); border-radius: 20px;
+    padding: 0.2rem 0.6rem; font-size: 0.62rem; color: var(--muted); letter-spacing: 0.05em;
+  }
+
+  /* ── ANALYZING STATE ── */
+  .analyzing-section {
+    display: none; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 3rem 2rem; text-align: center; position: relative; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+  .analyzing-section::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--summa));
+    animation: shimmer 1.5s infinite;
+  }
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+  .spinner {
+    width: 48px; height: 48px; border: 3px solid var(--border);
+    border-top-color: var(--accent); border-radius: 50%;
+    animation: spin 0.8s linear infinite; margin: 0 auto 1.5rem;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .analyzing-title { font-family: 'Inter', sans-serif; font-size: 1.25rem; font-weight: 800; margin-bottom: 0.5rem; letter-spacing: -0.02em; }
+  .analyzing-sub { color: var(--muted); font-size: 0.75rem; }
+  .analyzing-steps { margin-top: 1.5rem; display: flex; flex-direction: column; gap: 0.5rem; align-items: center; }
+  .step-item {
+    display: flex; align-items: center; gap: 0.6rem; font-size: 0.72rem; color: var(--muted);
+    transition: color 0.3s;
+  }
+  .step-item.active { color: var(--accent2); }
+  .step-item.done { color: var(--green); }
+  .step-dot {
+    width: 8px; height: 8px; border-radius: 50%; background: var(--border);
+    transition: background 0.3s; flex-shrink: 0;
+  }
+  .step-item.active .step-dot { background: var(--accent); animation: pulse 1s infinite; }
+  .step-item.done .step-dot { background: var(--green); }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+  /* ── QUERY SECTION ── */
+  .query-section {
+    display: none; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; padding: 2rem; position: relative; overflow: hidden;
+  }
+  .query-section::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, var(--green), var(--accent));
+  }
+  .query-title { font-family: 'Inter', sans-serif; font-size: 1.2rem; font-weight: 800; margin-bottom: 0.5rem; letter-spacing: -0.02em; }
+  .query-sub { color: var(--muted); font-size: 0.72rem; margin-bottom: 1.5rem; }
+
+  .student-info-bar {
+    display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.5rem;
+    background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 0.85rem 1rem;
+  }
+  .sib-item { font-size: 0.72rem; }
+  .sib-label { color: var(--muted); font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 2px; }
+  .sib-val { color: var(--text); font-weight: 500; }
+
+  .query-options { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.75rem; }
+  .query-btn {
+    background: var(--surface2); border: 1px solid var(--border); border-radius: 10px;
+    padding: 1rem; cursor: pointer; transition: all 0.2s; text-align: left; color: var(--text);
+    font-family: 'Inter', sans-serif;
+  }
+  .query-btn:hover { border-color: var(--accent); background: rgba(59,130,246,0.06); }
+  .query-btn.selected { border-color: var(--accent); background: rgba(59,130,246,0.1); }
+  .qb-label { font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.3rem; }
+  .qb-title { font-family: 'Inter', sans-serif; font-size: 1rem; font-weight: 700; }
+  .qb-sub { font-size: 0.65rem; color: var(--muted); margin-top: 0.25rem; }
+
+  .calc-btn {
+    margin-top: 1.25rem; background: var(--accent); color: white; border: none;
+    border-radius: 8px; padding: 0.75rem 2rem; font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem; cursor: pointer; transition: all 0.2s; letter-spacing: 0.05em;
+    display: none;
+  }
+  .calc-btn:hover { background: #2563eb; }
+  .calc-btn.show { display: inline-block; }
+
+  /* ── RESULTS SECTION ── */
+  .results-section { display: none; margin-top: 2rem; }
+
+  /* Sem Card */
+  .sem-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 1.5rem; margin-bottom: 1.5rem; position: relative; overflow: hidden;
+    animation: fadeIn 0.3s ease;
+  }
+  .sem-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--summa));
+  }
+  .sem-title {
+    font-family: 'Inter', sans-serif; font-size: 0.85rem; font-weight: 700;
+    letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent2); margin-bottom: 1.25rem;
+  }
+  .subjects-table { width: 100%; border-collapse: collapse; margin-bottom: 1.25rem; font-size: 0.78rem; }
+  .subjects-table th {
+    text-align: left; padding: 0.5rem 0.75rem; color: var(--muted); font-weight: 400;
+    font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase; border-bottom: 1px solid var(--border);
+  }
+  .subjects-table td { padding: 0.6rem 0.75rem; border-bottom: 1px solid rgba(30,45,69,0.5); vertical-align: middle; }
+  .subjects-table tr:last-child td { border-bottom: none; }
+  .subjects-table tr:hover td { background: rgba(59,130,246,0.04); }
+  .code-badge {
+    display: inline-block; background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 3px; padding: 0.15rem 0.4rem; font-size: 0.65rem; color: var(--accent2); white-space: nowrap;
+  }
+  .subject-desc { color: var(--text); font-size: 0.75rem; line-height: 1.4; }
+  .unit-badge { display: inline-block; color: var(--muted); font-size: 0.7rem; text-align: center; min-width: 30px; }
+  .nstp-row td { opacity: 0.5; }
+  .nstp-label { font-size: 0.6rem; color: var(--muted); margin-top: 2px; display: block; }
+  .grade-cell { font-family: 'Inter', sans-serif; font-weight: 700; font-size: 0.95rem; }
+  .grade-cell.good { color: var(--green); }
+  .grade-cell.warning { color: var(--gold); }
+  .grade-cell.failing { color: var(--red); }
+  .grade-cell.missing { color: var(--muted); font-size: 0.75rem; font-family: 'JetBrains Mono', monospace; font-weight: 400; }
+
+  /* GWA Result */
+  .gwa-result {
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;
+    background: var(--surface2); border: 1px solid var(--border); border-radius: 8px;
+    padding: 1rem 1.25rem; margin-top: 0.5rem;
+  }
+  .gwa-label { font-size: 0.68rem; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 0.2rem; }
+  .gwa-value { font-family: 'Inter', sans-serif; font-size: 1.8rem; font-weight: 800; line-height: 1; }
+  .gwa-value.good { color: var(--green); }
+  .gwa-value.ok { color: var(--gold); }
+  .gwa-value.bad { color: var(--red); }
+  .dean-status {
+    display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.4rem 0.8rem;
+    border-radius: 20px; font-size: 0.72rem; font-weight: 500; border: 1px solid;
+  }
+  .dean-status.qualified { background: rgba(16,185,129,0.1); border-color: var(--green); color: var(--green); }
+  .dean-status.disqualified { background: rgba(239,68,68,0.1); border-color: var(--red); color: var(--red); }
+  .dean-status.pending { background: rgba(100,116,139,0.1); border-color: var(--muted); color: var(--muted); }
+  .reason-list { font-size: 0.7rem; color: var(--red); margin-top: 0.5rem; list-style: none; }
+  .reason-list li::before { content: '↳ '; }
+  .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+
+  /* Latin honors section */
+  .latin-section {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 1.5rem; margin-top: 1.5rem; position: relative; overflow: hidden;
+  }
+  .latin-section::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, var(--gold), var(--summa), var(--gold2));
+  }
+  .latin-title {
+    font-family: 'Inter', sans-serif; font-size: 0.85rem; font-weight: 700;
+    letter-spacing: 0.1em; text-transform: uppercase; color: var(--gold2); margin-bottom: 1.25rem;
+  }
+  .latin-progress { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+  .honor-tier {
+    background: var(--surface2); border: 1px solid var(--border); border-radius: 8px;
+    padding: 1rem; text-align: center; transition: all 0.3s;
+  }
+  .honor-tier.active-tier { border-color: currentColor; box-shadow: 0 0 20px -5px currentColor; }
+  .honor-tier.summa { color: var(--summa); }
+  .honor-tier.magna { color: var(--magna); }
+  .honor-tier.cum { color: var(--cum); }
+  .honor-name { font-family: 'Inter', sans-serif; font-size: 0.9rem; font-weight: 700; margin-bottom: 0.25rem; }
+  .honor-range { font-size: 0.65rem; opacity: 0.7; }
+  .overall-gwa-display {
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;
+    background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 1.25rem;
+  }
+  .overall-num { font-family: 'Inter', sans-serif; font-size: 2.5rem; font-weight: 800; }
+  .progress-bar-wrap { flex: 1; min-width: 150px; }
+  .progress-bar-track { height: 6px; background: var(--border); border-radius: 3px; margin-top: 0.5rem; }
+  .progress-bar-fill { height: 100%; border-radius: 3px; transition: width 0.5s ease; }
+  .sem-count-info { font-size: 0.68rem; color: var(--muted); margin-top: 0.4rem; }
+
+  /* Distinction */
+  .distinction-section {
+    background: #1a1500; border: 1px solid #92400e; border-radius: 12px;
+    padding: 1.5rem; margin-top: 1.5rem; position: relative; overflow: hidden;
+  }
+  .distinction-section::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, var(--gold), var(--gold2), var(--gold));
+  }
+  .distinction-title { font-family: 'Inter', sans-serif; font-size: 0.85rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gold2); margin-bottom: 0.6rem; }
+  .distinction-subtitle { font-size: 0.68rem; color: #d97706; margin-bottom: 1.25rem; line-height: 1.5; }
+  .distinction-progress { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+  .distinction-tier { background: rgba(245,158,11,0.06); border: 1px solid rgba(245,158,11,0.2); border-radius: 8px; padding: 1rem; text-align: center; transition: all 0.3s; color: #d97706; }
+  .distinction-tier.active-dist-tier { border-color: var(--gold2); box-shadow: 0 0 20px -5px var(--gold); color: var(--gold2); }
+  .distinction-gwa-display { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; background: rgba(245,158,11,0.05); border: 1px solid rgba(245,158,11,0.15); border-radius: 8px; padding: 1.25rem; }
+  .distinction-num { font-family: 'Inter', sans-serif; font-size: 2.5rem; font-weight: 800; color: var(--gold2); }
+  .dist-badge { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.4rem 0.8rem; border-radius: 20px; font-size: 0.72rem; font-weight: 500; border: 1px solid var(--gold); background: rgba(245,158,11,0.12); color: var(--gold2); }
+  .disq-note { font-size: 0.67rem; color: #d97706; margin-top: 0.5rem; opacity: 0.8; }
+
+  /* Overview */
+  .overview-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.75rem; margin-bottom: 2rem; }
+  .overview-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1rem; text-align: center; }
+  .ov-label { font-size: 0.62rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.4rem; }
+  .ov-val { font-family: 'Inter', sans-serif; font-size: 1.3rem; font-weight: 700; }
+
+  /* Reset btn */
+  .reset-btn {
+    background: transparent; border: 1px solid var(--border); border-radius: 8px;
+    color: var(--muted); font-family: 'JetBrains Mono', monospace; font-size: 0.72rem;
+    padding: 0.5rem 1rem; cursor: pointer; transition: all 0.2s; margin-top: 2rem; display: block;
+  }
+  .reset-btn:hover { border-color: var(--red); color: var(--red); }
+
+  /* Error */
+  .error-box {
+    background: rgba(239,68,68,0.08); border: 1px solid var(--red); border-radius: 8px;
+    padding: 1rem 1.25rem; font-size: 0.75rem; color: var(--red); margin-top: 1rem; display: none;
+  }
+
+  /* Animations */
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* ── FINAL JUDGMENT BANNER ── */
+  .judgment-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75);
+    backdrop-filter: blur(6px); z-index: 1000; align-items: flex-start; justify-content: center;
+    padding: 2rem 1rem; overflow-y: auto;
+  }
+  .judgment-overlay.show { display: flex; animation: fadeIn 0.3s ease; }
+  .judgment-banner {
+    position: relative; max-width: 600px; width: 100%; border-radius: 16px;
+    padding: 2.5rem 2rem 2rem; border: 1px solid; overflow: hidden;
+    animation: bannerIn 0.4s cubic-bezier(0.34,1.56,0.64,1); margin: auto;
+  }
+  @keyframes bannerIn { from { opacity: 0; transform: translateY(-30px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+  .judgment-banner.summa-banner { background: linear-gradient(135deg, #1a0d3d, #0f1729); border-color: var(--summa); box-shadow: 0 0 60px -10px var(--summa); }
+  .judgment-banner.magna-banner { background: linear-gradient(135deg, #0d1f3d, #0f1729); border-color: var(--magna); box-shadow: 0 0 60px -10px var(--magna); }
+  .judgment-banner.cum-banner { background: linear-gradient(135deg, #0d2d22, #0f1729); border-color: var(--cum); box-shadow: 0 0 60px -10px var(--cum); }
+  .judgment-banner.dist-banner { background: linear-gradient(135deg, #2d1a00, #0f1729); border-color: var(--gold); box-shadow: 0 0 60px -10px var(--gold); }
+  .judgment-banner.none-banner { background: linear-gradient(135deg, #1a0d0d, #0f1729); border-color: var(--muted); }
+  .dismiss-btn {
+    position: absolute; top: 1rem; right: 1rem; background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.12); border-radius: 50%; width: 32px; height: 32px;
+    display: flex; align-items: center; justify-content: center; cursor: pointer;
+    color: var(--muted); font-size: 1rem; transition: all 0.2s;
+  }
+  .dismiss-btn:hover { background: rgba(255,255,255,0.15); color: var(--text); }
+  .banner-emoji { font-size: 3.5rem; text-align: center; margin-bottom: 0.75rem; animation: bounceIn 0.6s 0.2s both; }
+  @keyframes bounceIn { 0% { transform: scale(0); } 60% { transform: scale(1.2); } 100% { transform: scale(1); } }
+  .banner-title { font-family: 'Inter', sans-serif; font-size: clamp(1.4rem, 4vw, 2rem); font-weight: 800; text-align: center; line-height: 1.2; margin-bottom: 0.4rem; color: #ffffff; text-shadow: 0 2px 12px rgba(0,0,0,0.5); }
+  .banner-honor { text-align: center; font-family: 'Inter', sans-serif; font-size: 1rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 1.5rem; opacity: 0.85; }
+  .banner-gwa-box { display: flex; align-items: center; justify-content: center; gap: 0.75rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 0.9rem 1.25rem; margin-bottom: 1.5rem; }
+  .banner-gwa-label { font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
+  .banner-gwa-val { font-family: 'Inter', sans-serif; font-size: 2rem; font-weight: 800; }
+  .banner-deans { display: flex; align-items: center; justify-content: center; gap: 0.5rem; font-size: 0.72rem; color: var(--green); margin-bottom: 1rem; }
+  .banner-quote { font-size: 0.82rem; line-height: 1.7; color: rgba(226,232,240,0.8); text-align: center; font-style: italic; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 1.25rem; margin-top: 0.5rem; }
+
+  /* Confetti */
+  .confetti-wrap { position: fixed; inset: 0; pointer-events: none; z-index: 999; overflow: hidden; }
+  .confetti-wrap.hide { display: none; }
+  .confetti-piece { position: absolute; top: -10px; width: 8px; height: 8px; border-radius: 2px; animation: confettiFall linear forwards; }
+  @keyframes confettiFall { 0% { transform: translateY(0) rotate(0deg); opacity: 1; } 100% { transform: translateY(110vh) rotate(720deg); opacity: 0; } }
+
+  /* Footer */
+  .site-footer { background: #fff; border-top: 1px solid var(--border); margin-top: 3rem; padding: 2rem 1.5rem; position: relative; z-index: 1; }
+  .footer-inner { max-width: 1100px; margin: 0 auto; display: flex; flex-direction: column; align-items: center; gap: 1.25rem; text-align: center; }
+  .footer-brand { display: flex; align-items: center; gap: 0.85rem; }
+  .footer-logo-mark { width: 38px; height: 38px; background: linear-gradient(135deg, var(--accent), var(--summa)); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-family: 'Inter', sans-serif; font-weight: 800; font-size: 0.85rem; color: white; }
+  .footer-title { font-family: 'Inter', sans-serif; font-size: 0.95rem; font-weight: 700; color: var(--text); text-align: left; }
+  .footer-sub { font-size: 0.65rem; color: var(--muted); letter-spacing: 0.06em; text-align: left; margin-top: 2px; }
+  .footer-divider { width: 40px; height: 1px; background: var(--border); }
+  .footer-meta { display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; }
+  .footer-chip { background: var(--surface2); border: 1px solid var(--border); border-radius: 20px; padding: 0.25rem 0.75rem; font-size: 0.65rem; color: var(--muted); }
+  .footer-copy { font-size: 0.62rem; color: var(--border); letter-spacing: 0.06em; }
+  .footer-credit { display: flex; align-items: center; gap: 0.5rem; font-size: 0.72rem; color: var(--muted); flex-wrap: wrap; justify-content: center; }
+  .footer-link { color: var(--accent2); text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; border: 1px solid rgba(96,165,250,0.25); border-radius: 20px; padding: 0.2rem 0.65rem; transition: all 0.2s; background: rgba(96,165,250,0.06); }
+  .footer-link:hover { background: rgba(96,165,250,0.14); border-color: var(--accent2); color: white; }
+
+  @media (max-width: 640px) {
+    .subjects-table th:first-child, .subjects-table td:first-child { display: none; }
+  }
+
+  /* ── T&C Overlay ── */
+  .tc-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.88); z-index:3000; align-items:center; justify-content:center; padding:1.5rem; }
+  .tc-overlay.show { display:flex; animation:fadeIn 0.3s ease; }
+  .tc-box { background:var(--surface); border:1px solid var(--border); border-radius:16px; max-width:500px; width:100%; padding:2rem; max-height:88vh; overflow-y:auto; }
+  .tc-title { font-family:'Inter',sans-serif; font-size:1.15rem; font-weight:800; margin-bottom:0.35rem; color:var(--accent2); }
+  .tc-subtitle { font-size:0.71rem; color:var(--muted); margin-bottom:1.25rem; }
+  .tc-body { font-size:0.72rem; color:var(--text); line-height:1.75; margin-bottom:1.5rem; }
+  .tc-body h4 { color:var(--accent2); margin:0.9rem 0 0.3rem; font-size:0.76rem; text-transform:uppercase; letter-spacing:0.05em; }
+  .tc-accept { background:var(--accent); color:white; border:none; border-radius:8px; padding:0.75rem 2rem; font-family:'Inter',sans-serif; font-weight:700; font-size:0.85rem; cursor:pointer; flex:1; transition:opacity 0.2s; }
+  .tc-accept:hover { opacity:0.88; }
+  .tc-decline { background:transparent; color:var(--muted); border:1px solid var(--border); border-radius:8px; padding:0.75rem 2rem; font-family:'Inter',sans-serif; font-weight:600; font-size:0.85rem; cursor:pointer; flex:1; transition:all 0.2s; }
+  .tc-decline:hover { border-color:var(--red); color:var(--red); }
+  /* ── Restore Notice ── */
+  .restore-notice { display:none; align-items:center; justify-content:space-between; gap:1rem; background:rgba(29,78,216,0.05); border:1px solid rgba(29,78,216,0.15); border-radius:10px; padding:0.75rem 1.25rem; margin-bottom:1.25rem; font-size:0.72rem; color:var(--accent2); flex-wrap:wrap; }
+  .restore-clear { background:transparent; border:1px solid rgba(239,68,68,0.35); color:var(--red); border-radius:6px; padding:0.3rem 0.8rem; font-size:0.69rem; cursor:pointer; font-family:'JetBrains Mono',monospace; transition:all 0.2s; }
+  .restore-clear:hover { background:rgba(239,68,68,0.1); }
+
+
+  /* ── Mode Tabs ── */
+  .mode-tabs { display:flex; gap:0; margin-bottom:1.5rem; border:1px solid var(--border); border-radius:10px; overflow:hidden; background:var(--surface2); }
+  .mode-tab { flex:1; padding:0.75rem 1rem; font-size:0.88rem; font-weight:600; font-family:'Inter',sans-serif; border:none; background:transparent; color:var(--muted); cursor:pointer; transition:all 0.2s; }
+  .mode-tab.active { background:var(--accent); color:#fff; }
+  .mode-tab:hover:not(.active) { background:var(--border); color:var(--text); }
+
+  /* ── Manual Input Section ── */
+  .manual-section { display:none; }
+  .manual-section.show { display:block; }
+  .manual-program-select { display:flex; gap:0.75rem; margin-bottom:1.5rem; flex-wrap:wrap; }
+  .prog-btn { flex:1; min-width:140px; padding:0.75rem 1rem; border:1.5px solid var(--border); border-radius:8px; background:var(--surface); font-size:0.88rem; font-weight:600; font-family:'Inter',sans-serif; color:var(--muted); cursor:pointer; transition:all 0.2s; text-align:center; }
+  .prog-btn.active { border-color:var(--accent); color:var(--accent); background:rgba(29,78,216,0.05); }
+  .manual-sem-tabs { display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:1.25rem; }
+  .msem-tab { padding:0.45rem 0.85rem; border:1px solid var(--border); border-radius:6px; font-size:0.78rem; font-weight:600; background:var(--surface); color:var(--muted); cursor:pointer; transition:all 0.2s; font-family:'Inter',sans-serif; }
+  .msem-tab.active { background:var(--accent); color:#fff; border-color:var(--accent); }
+  .manual-sem-panel { display:none; }
+  .manual-sem-panel.show { display:block; }
+  .manual-sem-header { font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:var(--accent); border-left:3px solid var(--accent); padding-left:0.6rem; margin-bottom:1rem; }
+  .manual-subj-row { display:grid; grid-template-columns:1fr 70px 90px; gap:0.5rem; align-items:center; margin-bottom:0.6rem; }
+  .manual-subj-row input { padding:0.55rem 0.7rem; border:1px solid var(--border); border-radius:6px; font-size:0.85rem; font-family:'Inter',sans-serif; background:var(--surface); color:var(--text); width:100%; transition:border 0.2s; }
+  .manual-subj-row input:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(29,78,216,0.1); }
+  .manual-subj-row input::placeholder { color:var(--muted); opacity:0.6; }
+  .manual-col-headers { display:grid; grid-template-columns:1fr 70px 90px; gap:0.5rem; margin-bottom:0.35rem; }
+  .manual-col-headers span { font-size:0.62rem; text-transform:uppercase; letter-spacing:0.1em; color:var(--muted); font-weight:700; }
+  .add-subj-btn { display:flex; align-items:center; gap:0.4rem; background:transparent; border:1px dashed var(--border); border-radius:6px; padding:0.5rem 0.85rem; font-size:0.8rem; color:var(--muted); cursor:pointer; margin-top:0.5rem; transition:all 0.2s; font-family:'Inter',sans-serif; }
+  .add-subj-btn:hover { border-color:var(--accent); color:var(--accent); }
+  .remove-subj-btn { background:transparent; border:none; color:var(--muted); cursor:pointer; font-size:1rem; padding:0.2rem 0.4rem; border-radius:4px; transition:color 0.2s; }
+  .remove-subj-btn:hover { color:var(--red); }
+  .manual-actions { display:flex; gap:0.75rem; margin-top:1.5rem; }
+  .manual-submit-btn { flex:1; padding:0.9rem; background:var(--accent); color:#fff; border:none; border-radius:8px; font-size:1rem; font-weight:700; font-family:'Inter',sans-serif; cursor:pointer; text-transform:uppercase; letter-spacing:0.02em; box-shadow:0 2px 8px rgba(29,78,216,0.25); transition:all 0.2s; }
+  .manual-submit-btn:hover { opacity:0.9; transform:translateY(-1px); }
+  .manual-clear-btn { padding:0.9rem 1.25rem; background:transparent; color:var(--muted); border:1px solid var(--border); border-radius:8px; font-size:0.9rem; font-weight:600; font-family:'Inter',sans-serif; cursor:pointer; transition:all 0.2s; }
+  .manual-clear-btn:hover { border-color:var(--red); color:var(--red); }
+  .nstp-note { font-size:0.72rem; color:var(--muted); margin-top:0.35rem; padding:0.4rem 0.6rem; background:var(--surface2); border-radius:5px; }
+
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <div class="school-badge">CTU Carmen Campus · BIT-CT</div>
+    <h1>Grade Calculator</h1>
+    <p class="subtitle">Developed by &nbsp;<a href="https://www.facebook.com/raymar.sulib.3" target="_blank" rel="noopener" style="color:var(--accent2);text-decoration:none;border-bottom:1px solid rgba(96,165,250,0.4);padding-bottom:1px;">Raymar B. Sulib</a></p>
+  </header>
+
+  <!-- STEP 1: Upload / Manual -->
+  <div id="input-section">
+    <div class="mode-tabs">
+      <button class="mode-tab active" id="tab-upload" onclick="switchMode('upload')">📄 Upload Grade Sheet</button>
+      <button class="mode-tab" id="tab-manual" onclick="switchMode('manual')">✏️ Enter Manually</button>
+    </div>
+
+    <!-- Upload Mode -->
+    <div id="upload-mode">
+      <div class="upload-section" id="upload-section"
+        ondragover="event.preventDefault(); this.classList.add('drag-over')"
+        ondragleave="this.classList.remove('drag-over')"
+        ondrop="handleDrop(event)">
+        <div class="upload-icon">📄</div>
+        <div class="upload-title">Upload Your Grade Sheet</div>
+        <div class="upload-sub">
+          Drop your grades file here, or click to browse.<br>
+          Supports PDF documents and image files (JPG, PNG).
+        </div>
+        <button class="upload-btn" onclick="document.getElementById('file-input').click()">Choose File</button>
+        <input type="file" id="file-input" accept=".pdf,.jpg,.jpeg,.png,.webp" onchange="handleFileSelect(event)">
+        <div class="upload-formats">
+          <span class="fmt-chip">PDF</span>
+          <span class="fmt-chip">JPG</span>
+          <span class="fmt-chip">PNG</span>
+        </div>
+        <div class="error-box" id="error-box">⚠ Could not extract grades from the file. Please make sure it is a clear image or PDF of your grade sheet.</div>
+      </div>
+    </div>
+
+    <!-- Manual Mode -->
+    <div id="manual-mode" style="display:none">
+      <div class="manual-program-select">
+        <button class="prog-btn active" id="prog-bitct" onclick="selectProgram('bitct')">🎓 CTU BIT-CT</button>
+        <button class="prog-btn" id="prog-other" onclick="selectProgram('other')">📝 Other Program</button>
+      </div>
+      <div id="manual-form-wrap"></div>
+      <div class="manual-actions">
+        <button class="manual-clear-btn" onclick="clearManualForm()">Clear</button>
+        <button class="manual-submit-btn" onclick="submitManualGrades()">Calculate Grades →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 2: Analyzing -->
+  <div class="analyzing-section" id="analyzing-section">
+    <div class="spinner"></div>
+    <div class="analyzing-title">Analyzing your grade sheet…</div>
+    <div class="analyzing-sub">Gemini AI is reading and extracting your grades</div>
+    <div class="analyzing-steps">
+      <div class="step-item active" id="step-1"><div class="step-dot"></div> Reading file</div>
+      <div class="step-item" id="step-2"><div class="step-dot"></div> Extracting subjects and grades</div>
+      <div class="step-item" id="step-3"><div class="step-dot"></div> Organizing by semester</div>
+      <div class="step-item" id="step-4"><div class="step-dot"></div> Preparing results</div>
+    </div>
+  </div>
+
+  <!-- STEP 3: Query -->
+  <div class="query-section" id="query-section">
+    <div class="query-title">✅ Grades extracted successfully!</div>
+    <div class="query-sub">What would you like to calculate?</div>
+
+    <div class="student-info-bar" id="student-info-bar">
+      <div class="sib-item"><div class="sib-label">Student</div><div class="sib-val" id="sib-name">—</div></div>
+      <div class="sib-item"><div class="sib-label">Student No.</div><div class="sib-val" id="sib-no">—</div></div>
+      <div class="sib-item"><div class="sib-label">Program</div><div class="sib-val" id="sib-prog">—</div></div>
+      <div class="sib-item"><div class="sib-label">Semesters found</div><div class="sib-val" id="sib-sems">—</div></div>
+    </div>
+
+    <div class="query-options" id="query-options">
+      <!-- dynamically populated -->
+    </div>
+
+    <button class="calc-btn" id="calc-btn" onclick="runCalculation()">Calculate →</button>
+  </div>
+
+  <!-- STEP 4: Results -->
+  <div class="results-section" id="results-section">
+    <div class="overview-grid" id="overview-grid" style="display:none"></div>
+    <div id="sem-results"></div>
+    <div id="latin-results"></div>
+    <div style="display:flex;gap:0.75rem;margin-top:1.5rem;flex-wrap:wrap">
+      <button class="reset-btn" onclick="goBackToQuery()" style="flex:1;min-width:140px">← Back to Options</button>
+      <button class="reset-btn" onclick="resetApp()" style="flex:1;min-width:140px;background:transparent;border:1px solid var(--border);color:var(--muted)">↩ Upload New File</button>
+      <button class="reset-btn" id="export-btn" onclick="exportGWACard()" style="flex:1;min-width:140px;background:var(--accent);color:#fff;border:none">📥 Export GWA Card</button>
+    </div>
+  </div>
+</div>
+
+<!-- Confetti -->
+
+<!-- T&C Overlay -->
+<div class="tc-overlay" id="tc-overlay">
+  <div class="tc-box">
+    <div class="tc-title">📋 Terms &amp; Conditions</div>
+    <div class="tc-subtitle">Please read before using CTU Grade Calculator</div>
+    <div class="tc-body">
+      <h4>1. For Reference Only</h4>
+      This tool is for <strong>personal academic reference only</strong>. Results are not official and must not be used as a substitute for your official grade records from CTU Carmen Campus.
+      <h4>2. Data Privacy</h4>
+      Your uploaded grade sheet is processed by Google Gemini AI to extract grade data. <strong>The developer (Raymar B. Sulib) does NOT have access to your uploaded files or grade data.</strong> Files are processed in real-time and are never stored on any server.
+      <h4>3. Accuracy</h4>
+      AI extraction may occasionally have errors. Always verify results against your official CTU records. GWA and honor computations follow CTU Carmen Campus guidelines to the best of the developer's knowledge.
+      <h4>4. Saved Data</h4>
+      Your extracted grades may be saved locally on your device (browser storage only) for your convenience when you return. This data never leaves your device.
+      <h4>5. No Liability</h4>
+      The developer is not responsible for any academic or personal decisions made based on the results shown by this tool.
+    </div>
+    <div style="display:flex;gap:0.75rem;margin-top:0">
+      <button class="tc-decline" onclick="declineTC()">Decline</button>
+      <button class="tc-accept" onclick="acceptTC()">I Understand &amp; Accept ✓</button>
+    </div>
+  </div>
+</div>
+
+<!-- Restore Notice -->
+<div class="restore-notice" id="restore-notice">
+  <span>📂 Your previous grades have been restored from your last session.</span>
+  <button class="restore-clear" onclick="clearSavedGrades()">Clear &amp; Upload New</button>
+</div>
+<div class="confetti-wrap hide" id="confetti-wrap"></div>
+
+<!-- Final Judgment Banner -->
+<div class="judgment-overlay" id="judgment-overlay">
+  <div class="judgment-banner" id="judgment-banner">
+    <button class="dismiss-btn" onclick="dismissBanner()">✕</button>
+    <div class="banner-emoji" id="banner-emoji">🎓</div>
+    <div class="banner-title" id="banner-title"></div>
+    <div class="banner-honor" id="banner-honor"></div>
+    <div class="banner-gwa-box">
+      <div>
+        <div class="banner-gwa-label">Overall GWA</div>
+        <div class="banner-gwa-val" id="banner-gwa-val">—</div>
+      </div>
+      <div style="width:1px;height:40px;background:rgba(255,255,255,0.1)"></div>
+      <div>
+        <div class="banner-gwa-label">Dean's List</div>
+        <div class="banner-gwa-val" id="banner-deans-val" style="font-size:1.2rem">—</div>
+      </div>
+    </div>
+    <div class="banner-deans" id="banner-deans-msg"></div>
+    <div class="banner-quote" id="banner-quote"></div>
+  </div>
+</div>
+
+<!-- Footer -->
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <div class="footer-logo-mark">GC</div>
+      <div>
+        <div class="footer-title">CTU Grade Calculator</div>
+        <div class="footer-sub">BIT — Computer Technology · Carmen Campus</div>
+      </div>
+    </div>
+    <div class="footer-divider"></div>
+    <div class="footer-meta">
+      <span class="footer-chip">AI-Powered Extraction</span>
+      <span class="footer-chip">Dean's List Tracker</span>
+      <span class="footer-chip">Latin Honors Tracker</span>
+    </div>
+    <div class="footer-divider"></div>
+    <div class="footer-credit">
+      <span>Designed &amp; developed by</span>
+      <a href="https://www.facebook.com/raymar.sulib.3" target="_blank" rel="noopener" class="footer-link">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:-2px;margin-right:4px;"><path d="M24 12.073C24 5.406 18.627 0 12 0S0 5.406 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.41c0-3.025 1.792-4.697 4.533-4.697 1.312 0 2.686.236 2.686.236v2.97h-1.513c-1.491 0-1.956.93-1.956 1.886v2.269h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z"/></svg>
+        Raymar B. Sulib
+      </a>
+    </div>
+    <div class="footer-copy">© 2025 · For academic use by CTU-Carmen BIT-CT students</div>
+  </div>
+</footer>
+
+<script>
+// ─── STATE ───────────────────────────────────────────────────────────────────
+let extractedData = null; // { studentName, studentNo, program, semesters: [...] }
+let selectedOption = null; // 'all' | 'latin' | 'sem-0' | 'sem-1' | ...
+
+window.addEventListener('DOMContentLoaded', () => {
+  if (!localStorage.getItem('ctu_tc_accepted')) {
+    document.getElementById('tc-overlay').classList.add('show');
+  }
+  // Version-based cache: clear old saved data if outdated
+  const CACHE_VERSION = 'v3';
+  if (localStorage.getItem('ctu_cache_version') !== CACHE_VERSION) {
+    localStorage.removeItem('ctu_grades');
+    localStorage.setItem('ctu_cache_version', CACHE_VERSION);
+  }
+  try {
+    const saved = localStorage.getItem('ctu_grades');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      // Only restore if it has valid semesters
+      if (parsed && Array.isArray(parsed.semesters) && parsed.semesters.length > 0) {
+        extractedData = parsed;
+        document.getElementById('sem-results').innerHTML = '';
+        document.getElementById('latin-results').innerHTML = '';
+        showQuerySection();
+        document.getElementById('restore-notice').style.display = 'flex';
+      } else {
+        localStorage.removeItem('ctu_grades');
+      }
+    }
+  } catch(e) { localStorage.removeItem('ctu_grades'); }
+});
+
+function acceptTC() {
+  localStorage.setItem('ctu_tc_accepted', '1');
+  document.getElementById('tc-overlay').classList.remove('show');
+}
+
+function declineTC() {
+  document.getElementById('tc-overlay').innerHTML = `
+    <div class="tc-box" style="text-align:center;padding:2.5rem">
+      <div style="font-size:2rem;margin-bottom:1rem">🚫</div>
+      <div class="tc-title" style="margin-bottom:0.5rem">Access Declined</div>
+      <p style="font-size:0.78rem;color:var(--muted);line-height:1.6">You must accept the Terms & Conditions to use this tool. You can close this tab or <a href="#" onclick="location.reload()" style="color:var(--accent2)">reload the page</a> to try again.</p>
+    </div>`;
+}
+
+function goBackToQuery() {
+  document.getElementById('results-section').style.display = 'none';
+  document.getElementById('query-section').style.display = 'block';
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function clearSavedGrades() {
+  localStorage.removeItem('ctu_grades');
+  extractedData = null; selectedOption = null;
+  document.getElementById('restore-notice').style.display = 'none';
+  showUpload();
+}
+
+// ─── FILE HANDLING ────────────────────────────────────────────────────────────
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('upload-section').classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file) processFile(file);
+}
+
+function handleFileSelect(e) {
+  const file = e.target.files[0];
+  if (file) processFile(file);
+}
+
+async function processFile(file) {
+  hideError();
+  showAnalyzing();
+
+  try {
+    const base64 = await fileToBase64(file);
+    const isPDF = file.type === 'application/pdf';
+    animateSteps();
+    const result = await analyzeWithClaude(base64, isPDF, file.type);
+    extractedData = result;
+    document.getElementById('sem-results').innerHTML = '';
+    document.getElementById('latin-results').innerHTML = '';
+    try { localStorage.setItem('ctu_grades', JSON.stringify(extractedData)); } catch(e) {}
+    document.getElementById('restore-notice').style.display = 'none';
+    showQuerySection();
+  } catch (err) {
+    console.error('Extraction error:', err);
+    showUpload();
+    showError(err.message);
+  }
+}
+
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(',')[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+// ─── STEP ANIMATION ──────────────────────────────────────────────────────────
+function animateSteps() {
+  const steps = ['step-1','step-2','step-3','step-4'];
+  steps.forEach((id, i) => {
+    setTimeout(() => {
+      if (i > 0) {
+        const prev = document.getElementById(steps[i-1]);
+        prev.classList.remove('active'); prev.classList.add('done');
+      }
+      document.getElementById(id).classList.add('active');
+    }, i * 1200);
+  });
+}
+
+// ─── GEMINI API (via Cloudflare Worker proxy) ────────────────────────────────
+const PROXY_URL = 'https://cold-band-08ec.sulibraymar.workers.dev/';
+
+async function analyzeWithClaude(base64Data, isPDF, mimeType) {
+  const systemPrompt = `You are a grade extraction assistant for CTU (Cebu Technological University) Carmen Campus, BIT-CT program. 
+Extract all student grade data from the uploaded document.
+
+Return ONLY a JSON object with this exact structure, no markdown, no explanation:
+{
+  "studentName": "LASTNAME, FIRSTNAME MIDDLENAME",
+  "studentNo": "student number or null",
+  "program": "program code or null",
+  "semesters": [
+    {
+      "label": "1st Semester SY XXXX-XXXX",
+      "year": 1,
+      "sem": 1,
+      "subjects": [
+        {
+          "code": "subject code",
+          "desc": "descriptive title",
+          "units": 3,
+          "grade": 1.5,
+          "nstp": false
+        }
+      ]
+    }
+  ]
+}
+
+IMPORTANT RULES:
+- grade must be a number (e.g. 1.5) or null if not available/blank
+- nstp must be true for any NSTP/CWTS/LTS/ROTC subjects
+- units must be a number
+- Include ALL subjects found, even those without grades
+- Organize by semester in chronological order
+- year should be 1, 2, 3, or 4 based on the school year
+- sem should be 1 or 2`;
+
+  const actualMimeType = isPDF ? 'application/pdf' : mimeType;
+
+  const requestBody = {
+    contents: [
+      {
+        parts: [
+          {
+            inline_data: {
+              mime_type: actualMimeType,
+              data: base64Data
+            }
+          },
+          {
+            text: 'Extract ALL grade data from ALL pages of this CTU grade sheet. IMPORTANT RULES: (1) For the "code" field, use the SUBJECT column value (e.g. GEC-PC, COMPTECH 111, PATHFIT 1, NSTP 1) — NOT the leftmost CODE column (e.g. CT108). (2) If a page has subjects but NO semester heading, those subjects belong to the LAST semester heading seen on a previous page — do NOT create a new semester for them. (3) Only create a new semester entry when a semester heading (e.g. "1st Semester SY XXXX-XXXX") is explicitly printed. (4) Do NOT infer or hallucinate future semesters. Only include what is printed. Return ONLY raw JSON with no markdown, no backticks, no explanation. Start your response with { and end with }. Follow this structure exactly: ' + systemPrompt
+          }
+        ]
+      }
+    ],
+    generationConfig: {
+      temperature: 0,
+      maxOutputTokens: 8192
+    }
+  };
+
+  const response = await fetch(PROXY_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(requestBody)
+  });
+
+  let responseText;
+  try { responseText = await response.text(); } catch(e) { responseText = '(unreadable)'; }
+
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status} — ${responseText.slice(0, 400)}`);
+  }
+
+  let data;
+  try { data = JSON.parse(responseText); } catch(e) { throw new Error('Response not JSON: ' + responseText.slice(0, 300)); }
+  if (data.error) throw new Error('API error: ' + JSON.stringify(data.error));
+
+  const text = data.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('') || '';
+  const jsonMatch = text.match(/{[\s\S]*}/); if (!jsonMatch) throw new Error('No JSON found in response: ' + text.slice(0, 300)); const clean = jsonMatch[0];
+
+  let parsed;
+  try { parsed = JSON.parse(clean); }
+  catch(e) { throw new Error('JSON parse failed. Response was: ' + text.slice(0, 500)); }
+
+  if (!parsed.semesters || !Array.isArray(parsed.semesters)) {
+    throw new Error('Unexpected structure: ' + JSON.stringify(parsed).slice(0, 300));
+  }
+  return parsed;
+}
+
+// ─── UI STATE MACHINES ────────────────────────────────────────────────────────
+function showAnalyzing() {
+  document.getElementById('input-section').style.display = 'none';
+  document.getElementById('analyzing-section').style.display = 'block';
+  document.getElementById('query-section').style.display = 'none';
+  document.getElementById('results-section').style.display = 'none';
+}
+
+function showUpload() {
+  document.getElementById('input-section').style.display = 'block';
+  document.getElementById('analyzing-section').style.display = 'none';
+  document.getElementById('query-section').style.display = 'none';
+  document.getElementById('results-section').style.display = 'none';
+}
+
+function switchMode(mode) {
+  const uploadMode = document.getElementById('upload-mode');
+  const manualMode = document.getElementById('manual-mode');
+  const tabUpload = document.getElementById('tab-upload');
+  const tabManual = document.getElementById('tab-manual');
+  if (mode === 'upload') {
+    uploadMode.style.display = 'block';
+    manualMode.style.display = 'none';
+    tabUpload.classList.add('active');
+    tabManual.classList.remove('active');
+  } else {
+    uploadMode.style.display = 'none';
+    manualMode.style.display = 'block';
+    tabUpload.classList.remove('active');
+    tabManual.classList.add('active');
+    if (!document.getElementById('manual-form-wrap').innerHTML) {
+      selectProgram('bitct');
+    }
+  }
+}
+
+function showQuerySection() {
+  document.getElementById('input-section').style.display = 'none';
+  document.getElementById('analyzing-section').style.display = 'none';
+  document.getElementById('query-section').style.display = 'block';
+  document.getElementById('results-section').style.display = 'none';
+
+  // Populate student info
+  document.getElementById('sib-name').textContent = extractedData.studentName || '—';
+  document.getElementById('sib-no').textContent = extractedData.studentNo || '—';
+  document.getElementById('sib-prog').textContent = extractedData.program || '—';
+  document.getElementById('sib-sems').textContent = extractedData.semesters.length;
+
+  // Build query options
+  const opts = document.getElementById('query-options');
+  opts.innerHTML = '';
+  selectedOption = null;
+  document.getElementById('calc-btn').classList.remove('show');
+
+  // All sems option
+  const hasGradeAnywhere = extractedData.semesters.some(s => s.subjects.some(sub => sub.grade !== null));
+  if (hasGradeAnywhere) {
+    addQueryOption(opts, 'all', 'All Semesters', 'Dean\'s List for each sem', 'Compute GWA for every semester and check Dean\'s List status for each.');
+    addQueryOption(opts, 'latin', 'Latin Honors Check', 'Overall GWA across all years', 'Compute your overall GWA from all semesters and determine your Latin Honor eligibility.');
+  }
+
+  // Individual sems
+  extractedData.semesters.forEach((sem, idx) => {
+    const hasGrades = sem.subjects.some(s => s.grade !== null);
+    const yearLabel = sem.year ? `${getOrdinal(sem.year)} Year` : '';
+    const semLabel = sem.sem ? `Semester ${sem.sem}` : '';
+    addQueryOption(opts, `sem-${idx}`, sem.label, `${yearLabel} · ${semLabel}`, `View grades and compute GWA for ${sem.label}.`);
+  });
+}
+
+function addQueryOption(container, value, title, sub, desc) {
+  const btn = document.createElement('button');
+  btn.className = 'query-btn';
+  btn.innerHTML = `<div class="qb-label">${sub}</div><div class="qb-title">${title}</div><div class="qb-sub">${desc}</div>`;
+  btn.onclick = () => selectQuery(value, btn);
+  container.appendChild(btn);
+}
+
+function selectQuery(value, btn) {
+  document.querySelectorAll('.query-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  selectedOption = value;
+  document.getElementById('calc-btn').classList.add('show');
+}
+
+function showError(msg) {
+  const box = document.getElementById('error-box');
+  let title = '⚠ Extraction Failed';
+  let detail = 'Make sure the file is a clear image or PDF of your CTU grade sheet and try again.';
+
+  if (msg) {
+    const m = msg.toLowerCase();
+    if (m.includes('429') || m.includes('quota') || m.includes('rate') || m.includes('limit')) {
+      title = '⏳ Daily Limit Reached';
+      detail = 'The free AI service has reached its daily request limit. Please try again tomorrow — the limit resets at midnight. If this keeps happening, the site may be getting heavy traffic.';
+    } else if (m.includes('fetch') || m.includes('network') || m.includes('failed to fetch')) {
+      title = '🌐 Connection Error';
+      detail = 'Could not reach the AI service. Check your internet connection and try again.';
+    } else if (m.includes('json') || m.includes('parse')) {
+      title = '⚠ Extraction Error';
+      detail = 'The AI could not read the grade data properly. Try uploading a clearer image or a different file format.';
+    } else if (m.includes('403') || m.includes('401')) {
+      title = '🔑 Service Error';
+      detail = 'There is a configuration issue with the AI service. Please contact the developer.';
+    }
+  }
+
+  box.innerHTML = `<strong style="display:block;margin-bottom:0.35rem;font-size:0.95rem">${title}</strong><span style="font-size:0.83rem;opacity:0.85">${detail}</span>`;
+  box.style.display = 'block';
+}
+function hideError() { document.getElementById('error-box').style.display = 'none'; }
+
+function resetApp() {
+  extractedData = null; selectedOption = null;
+  document.getElementById('file-input').value = '';
+  document.getElementById('sem-results').innerHTML = '';
+  document.getElementById('latin-results').innerHTML = '';
+  document.getElementById('overview-grid').innerHTML = '';
+  document.getElementById('overview-grid').style.display = 'none';
+  ['step-1','step-2','step-3','step-4'].forEach(id => {
+    const el = document.getElementById(id);
+    el.classList.remove('active','done');
+  });
+  document.getElementById('step-1').classList.add('active');
+  showUpload();
+}
+
+// ─── CALCULATION ENGINE ────────────────────────────────────────────────────────
+function runCalculation() {
+  if (!selectedOption) return;
+  document.getElementById('results-section').style.display = 'block';
+  document.getElementById('sem-results').innerHTML = '';
+  document.getElementById('latin-results').innerHTML = '';
+  document.getElementById('overview-grid').innerHTML = '';
+  document.getElementById('overview-grid').style.display = 'none';
+
+  // Scroll to results
+  setTimeout(() => document.getElementById('results-section').scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+
+  if (selectedOption === 'all') {
+    renderAllSems();
+    renderLatinHonors();
+    renderOverview();
+  } else if (selectedOption === 'latin') {
+    renderLatinHonors();
+    renderOverviewLatin();
+  } else if (selectedOption.startsWith('sem-')) {
+    const idx = parseInt(selectedOption.split('-')[1]);
+    renderSingleSem(idx);
+  }
+}
+
+function computeSemGWA(subjects) {
+  let weighted = 0, units = 0;
+  subjects.forEach(s => {
+    if (s.nstp || s.grade === null) return;
+    weighted += s.grade * s.units;
+    units += s.units;
+  });
+  return units === 0 ? null : weighted / units;
+}
+
+function computeOverallGWA() {
+  let weighted = 0, units = 0;
+  extractedData.semesters.forEach(sem => {
+    sem.subjects.forEach(s => {
+      if (s.nstp || s.grade === null) return;
+      weighted += s.grade * s.units;
+      units += s.units;
+    });
+  });
+  return units === 0 ? null : weighted / units;
+}
+
+function checkDeansEligibility(subjects) {
+  const reasons = [];
+  let allEntered = true;
+  subjects.forEach(s => {
+    if (s.nstp) return;
+    if (s.grade === null) { allEntered = false; return; }
+    if (s.grade >= 5.0) reasons.push(`Failing grade in ${s.code} (${s.grade})`);
+    else if (s.grade > 2.5) reasons.push(`Grade below 2.5 in ${s.code}: ${s.grade}`);
+  });
+  const gwa = computeSemGWA(subjects);
+  if (gwa !== null && gwa > 1.750) reasons.push(`GWA of ${gwa.toFixed(4)} exceeds 1.750 cutoff`);
+  return { qualified: allEntered && reasons.length === 0, allEntered, reasons };
+}
+
+function checkAllGradesForHonors() {
+  let hasFailed = false, hasDisqualifying = false;
+  const failedSubjects = [], disqualifyingSubjects = [];
+  extractedData.semesters.forEach(sem => {
+    sem.subjects.forEach(s => {
+      if (s.nstp || s.grade === null) return;
+      if (s.grade >= 5.0) { hasFailed = true; failedSubjects.push(s.code); }
+      else if (s.grade > 2.5) { hasDisqualifying = true; disqualifyingSubjects.push(s.code); }
+    });
+  });
+  return { hasFailed, hasDisqualifying, failedSubjects, disqualifyingSubjects };
+}
+
+function getHonorLabel(gwa) {
+  if (gwa === null) return null;
+  if (gwa <= 1.200) return { tier: 'summa', latin: 'Summa Cum Laude' };
+  if (gwa <= 1.450) return { tier: 'magna', latin: 'Magna Cum Laude' };
+  if (gwa <= 1.750) return { tier: 'cum', latin: 'Cum Laude' };
+  return null;
+}
+
+// ─── RENDER FUNCTIONS ─────────────────────────────────────────────────────────
+function renderAllSems() {
+  const container = document.getElementById('sem-results');
+  extractedData.semesters.forEach((sem, idx) => {
+    container.appendChild(buildSemCard(sem, idx, true));
+  });
+}
+
+function renderSingleSem(idx) {
+  const sem = extractedData.semesters[idx];
+  const container = document.getElementById('sem-results');
+  container.appendChild(buildSemCard(sem, idx, true));
+}
+
+function buildSemCard(sem, idx, showDeans) {
+  const gwa = computeSemGWA(sem.subjects);
+  const { qualified, allEntered, reasons } = checkDeansEligibility(sem.subjects);
+
+  const card = document.createElement('div');
+  card.className = 'sem-card';
+
+  const rows = sem.subjects.map(s => {
+    let gradeClass = 'missing', gradeText = '—';
+    if (s.grade !== null) {
+      gradeText = s.grade.toFixed(1);
+      if (s.grade >= 5.0) gradeClass = 'failing';
+      else if (s.grade > 2.5) gradeClass = 'warning';
+      else gradeClass = 'good';
+    }
+    return `
+      <tr class="${s.nstp ? 'nstp-row' : ''}">
+        <td><span class="code-badge">${s.code}</span></td>
+        <td>
+          <span class="subject-desc">${s.desc}</span>
+          ${s.nstp ? '<span class="nstp-label">excluded from GWA</span>' : ''}
+        </td>
+        <td><span class="unit-badge">${s.units}</span></td>
+        <td><span class="grade-cell ${gradeClass}">${gradeText}</span></td>
+      </tr>`;
+  }).join('');
+
+  let deanHTML = '';
+  if (showDeans) {
+    if (!allEntered) {
+      deanHTML = `<div class="dean-status pending"><span class="dot"></span> Some grades not yet available</div>`;
+    } else if (qualified) {
+      const semGwa = computeSemGWA(sem.subjects);
+      const dlLevel = semGwa <= 1.200 ? 'With Highest Honors' : semGwa <= 1.450 ? 'With High Honors' : 'With Honors';
+      const dlMsg = semGwa <= 1.200 ? "🏆 Outstanding! You're a Dean's Lister With Highest Honors this semester!" : semGwa <= 1.450 ? "🥇 Excellent! You're a Dean's Lister With High Honors this semester!" : "🎓 Great job! You're a Dean's Lister With Honors this semester!";
+      deanHTML = `<div class="dean-status qualified" style="flex-direction:column;align-items:flex-start;gap:0.35rem"><div><span class="dot"></span> Dean's Lister — ${dlLevel} ✓</div><div style="font-size:0.7rem;color:var(--green);opacity:0.9;padding-left:0.1rem">${dlMsg}</div></div>`;
+    } else {
+      const reasonItems = reasons.map(r => `<li>${r}</li>`).join('');
+      const semGwa = computeSemGWA(sem.subjects);
+      const motivational = semGwa !== null && semGwa <= 1.75
+        ? "💪 So close! Keep pushing — you're almost there!"
+        : semGwa !== null && semGwa <= 2.0
+        ? "📚 Keep working hard. Every grade is a chance to improve!"
+        : "🌱 This semester was tough, but you're still moving forward. Don't give up!";
+      deanHTML = `
+        <div style="display:flex;flex-direction:column;gap:0.35rem">
+          <div class="dean-status disqualified"><span class="dot"></span> Not Qualified</div>
+          <ul class="reason-list">${reasonItems}</ul>
+          <div style="font-size:0.7rem;color:var(--muted);opacity:0.85;padding-left:0.1rem">${motivational}</div>
+        </div>`;
+    }
+  }
+
+  card.innerHTML = `
+    <div class="sem-title">${sem.label}</div>
+    <div class="table-wrap">
+    <table class="subjects-table">
+      <thead>
+        <tr>
+          <th>Subject Code</th><th>Descriptive Title</th><th>Units</th><th>Grade</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+    </div>
+    <div class="gwa-result">
+      <div>
+        <div class="gwa-label">Semester GWA</div>
+        <div class="gwa-value ${gwa === null ? '' : gwa <= 1.75 ? 'good' : gwa <= 2.5 ? 'ok' : 'bad'}">
+          ${gwa !== null ? gwa.toFixed(4) : '—'}
+        </div>
+      </div>
+      ${deanHTML}
+    </div>`;
+
+  return card;
+}
+
+function renderLatinHonors() {
+  const gwa = computeOverallGWA();
+  const { hasFailed, hasDisqualifying, failedSubjects, disqualifyingSubjects } = checkAllGradesForHonors();
+  const honorLabel = getHonorLabel(gwa);
+  const container = document.getElementById('latin-results');
+
+  // Latin section
+  const latinDiv = document.createElement('div');
+  latinDiv.className = 'latin-section';
+
+  let activeTier = '';
+  let badgeHTML = '';
+  let barColor = 'var(--muted)';
+  let gwaColor = 'var(--muted)';
+
+  if (gwa !== null) {
+    if (hasFailed) {
+      badgeHTML = `<div class="dean-status disqualified"><span class="dot"></span> Disqualified — Failed grade in: ${failedSubjects.join(', ')}</div>`;
+      barColor = 'var(--red)'; gwaColor = 'var(--red)';
+    } else if (hasDisqualifying && honorLabel) {
+      badgeHTML = `<div class="dean-status disqualified"><span class="dot"></span> Disqualified from Latin Honors — grade above 2.5 in: ${disqualifyingSubjects.join(', ')}</div>`;
+      barColor = 'var(--red)'; gwaColor = 'var(--red)';
+    } else if (honorLabel) {
+      const colors = { summa: 'var(--summa)', magna: 'var(--magna)', cum: 'var(--cum)' };
+      barColor = colors[honorLabel.tier]; gwaColor = colors[honorLabel.tier];
+      activeTier = honorLabel.tier;
+      badgeHTML = `<div class="dean-status qualified"><span class="dot"></span> ${honorLabel.latin}</div>`;
+    } else {
+      badgeHTML = `<div class="dean-status disqualified"><span class="dot"></span> No Latin Honor — GWA exceeds 1.750</div>`;
+      barColor = 'var(--red)'; gwaColor = 'var(--red)';
+    }
+  } else {
+    badgeHTML = `<div class="dean-status pending"><span class="dot"></span> Not enough grades to compute</div>`;
+  }
+
+  // Incomplete grades note
+  let totalSubjs = 0, enteredSubjs = 0;
+  extractedData.semesters.forEach(sem => sem.subjects.forEach(s => { if (!s.nstp) { totalSubjs++; if (s.grade !== null) enteredSubjs++; } }));
+  const isIncomplete = enteredSubjs < totalSubjs;
+  if (isIncomplete && honorLabel && gwa !== null && !hasFailed) {
+    badgeHTML += `<div style="margin-top:0.75rem;padding:0.65rem 1rem;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);border-radius:8px;font-size:0.72rem;color:var(--gold2);line-height:1.5">⚠️ <strong>Note:</strong> ${totalSubjs - enteredSubjs} grade(s) not yet entered (${enteredSubjs}/${totalSubjs} complete). Honor status shown is <strong>tentative</strong> and cannot be confirmed until all grades are complete.</div>`;
+  }
+
+  // Count total non-NSTP subjects with grades
+  let entered = 0, total = 0;
+  extractedData.semesters.forEach(sem => sem.subjects.forEach(s => {
+    if (s.nstp) return; total++;
+    if (s.grade !== null) entered++;
+  }));
+  const pct = total > 0 ? Math.round((entered / total) * 100) : 0;
+
+  latinDiv.innerHTML = `
+    <div class="latin-title">⭐ Latin Honors Tracker</div>
+    <div class="latin-progress">
+      <div class="honor-tier summa ${activeTier === 'summa' ? 'active-tier' : ''}">
+        <div class="honor-name">Summa Cum Laude</div><div class="honor-range">GWA: 1.000 – 1.200</div>
+      </div>
+      <div class="honor-tier magna ${activeTier === 'magna' ? 'active-tier' : ''}">
+        <div class="honor-name">Magna Cum Laude</div><div class="honor-range">GWA: 1.201 – 1.450</div>
+      </div>
+      <div class="honor-tier cum ${activeTier === 'cum' ? 'active-tier' : ''}">
+        <div class="honor-name">Cum Laude</div><div class="honor-range">GWA: 1.451 – 1.750</div>
+      </div>
+    </div>
+    <div class="overall-gwa-display">
+      <div>
+        <div class="gwa-label">Overall GWA (All Years)</div>
+        <div class="overall-num" style="color:${gwaColor}">${gwa !== null ? gwa.toFixed(4) : '—'}</div>
+      </div>
+      <div class="progress-bar-wrap">
+        <div class="gwa-label">Grades entered</div>
+        <div class="progress-bar-track">
+          <div class="progress-bar-fill" style="width:${pct}%;background:${barColor}"></div>
+        </div>
+        <div class="sem-count-info">${entered}/${total} subjects entered</div>
+      </div>
+      ${badgeHTML}
+    </div>`;
+
+  container.appendChild(latinDiv);
+
+  // Academic Distinction section (if applicable)
+  if (!hasFailed && hasDisqualifying && honorLabel) {
+    const distDiv = document.createElement('div');
+    distDiv.className = 'distinction-section';
+    const distTier = honorLabel.tier === 'summa' ? 'highest' : honorLabel.tier === 'magna' ? 'high' : 'honors';
+    const distLabel = honorLabel.tier === 'summa' ? 'With Highest Honors' : honorLabel.tier === 'magna' ? 'With High Honors' : 'With Honors';
+    distDiv.innerHTML = `
+      <div class="distinction-title">🏅 Academic Distinction</div>
+      <div class="distinction-subtitle">Your GWA qualifies for honors, but a grade of 2.6 or above disqualifies you from Latin Honors. You may be eligible for <strong style="color:var(--gold2)">Academic Distinction</strong> instead.</div>
+      <div class="distinction-progress">
+        <div class="distinction-tier ${distTier === 'highest' ? 'active-dist-tier' : ''}"><div class="honor-name">With Highest Honors</div><div class="honor-range">GWA: 1.000 – 1.200</div></div>
+        <div class="distinction-tier ${distTier === 'high' ? 'active-dist-tier' : ''}"><div class="honor-name">With High Honors</div><div class="honor-range">GWA: 1.201 – 1.450</div></div>
+        <div class="distinction-tier ${distTier === 'honors' ? 'active-dist-tier' : ''}"><div class="honor-name">With Honors</div><div class="honor-range">GWA: 1.451 – 1.750</div></div>
+      </div>
+      <div class="distinction-gwa-display">
+        <div>
+          <div class="gwa-label">Overall GWA</div>
+          <div class="distinction-num">${gwa.toFixed(4)}</div>
+        </div>
+        <div class="progress-bar-wrap">
+          <div class="gwa-label">Grades entered</div>
+          <div class="progress-bar-track">
+            <div class="progress-bar-fill" style="width:${pct}%;background:var(--gold)"></div>
+          </div>
+          <div class="sem-count-info">${entered}/${total} subjects entered</div>
+        </div>
+        <div>
+          <div class="dist-badge"><span class="dot" style="background:var(--gold2)"></span> Academic Distinction — ${distLabel}</div>
+          <div class="disq-note">Disqualifying subject(s): ${disqualifyingSubjects.join(', ')}</div>
+        </div>
+      </div>`;
+    container.appendChild(distDiv);
+  }
+
+  // Show final judgment banner if all grades are present
+  if (entered === total && total > 0) {
+    setTimeout(() => showFinalBanner(gwa, hasFailed, hasDisqualifying, honorLabel), 800);
+  }
+}
+
+function renderOverview() {
+  const grid = document.getElementById('overview-grid');
+  grid.style.display = 'grid';
+  const gwa = computeOverallGWA();
+  const { hasFailed, hasDisqualifying } = checkAllGradesForHonors();
+  const honorLabel = getHonorLabel(gwa);
+  let deansCount = 0;
+  extractedData.semesters.forEach(sem => { if (checkDeansEligibility(sem.subjects).qualified) deansCount++; });
+  const totalSems = extractedData.semesters.length;
+
+  let honorText = '—', honorColor = 'var(--muted)';
+  if (gwa !== null) {
+    if (hasFailed) { honorText = 'Disqualified'; honorColor = 'var(--red)'; }
+    else if (hasDisqualifying && honorLabel) {
+      const d = { summa:'Dist.Highest', magna:'Dist.High', cum:'Dist.Honors' };
+      honorText = d[honorLabel.tier]; honorColor = 'var(--gold2)';
+    } else if (honorLabel) {
+      const s = { summa:'Summa CL', magna:'Magna CL', cum:'Cum Laude' };
+      const c = { summa:'var(--summa)', magna:'var(--magna)', cum:'var(--cum)' };
+      honorText = s[honorLabel.tier]; honorColor = c[honorLabel.tier];
+    } else { honorText = 'None'; honorColor = 'var(--red)'; }
+  }
+
+  grid.innerHTML = `
+    <div class="overview-card"><div class="ov-label">Overall GWA</div><div class="ov-val" style="color:${gwa !== null ? (gwa<=1.75?'var(--green)':gwa<=2.5?'var(--gold)':'var(--red)') : 'var(--muted)'}">${gwa !== null ? gwa.toFixed(3) : '—'}</div></div>
+    <div class="overview-card"><div class="ov-label">Honor Status</div><div class="ov-val" style="color:${honorColor};font-size:0.85rem">${honorText}</div></div>
+    <div class="overview-card"><div class="ov-label">Sems w/ Dean's</div><div class="ov-val" style="color:${deansCount>0?'var(--green)':'var(--muted)'}">${deansCount}/${totalSems}</div></div>
+    <div class="overview-card"><div class="ov-label">Semesters</div><div class="ov-val" style="color:var(--accent2)">${totalSems}</div></div>`;
+}
+
+function renderOverviewLatin() {
+  const grid = document.getElementById('overview-grid');
+  grid.style.display = 'grid';
+  const gwa = computeOverallGWA();
+  const { hasFailed, hasDisqualifying } = checkAllGradesForHonors();
+  const honorLabel = getHonorLabel(gwa);
+  let entered = 0, total = 0;
+  extractedData.semesters.forEach(sem => sem.subjects.forEach(s => { if (!s.nstp) { total++; if (s.grade !== null) entered++; } }));
+
+  let honorText = '—', honorColor = 'var(--muted)';
+  if (gwa !== null) {
+    if (hasFailed) { honorText = 'Disqualified'; honorColor = 'var(--red)'; }
+    else if (hasDisqualifying && honorLabel) { honorText = 'Acad. Dist.'; honorColor = 'var(--gold2)'; }
+    else if (honorLabel) {
+      const s = { summa:'Summa CL', magna:'Magna CL', cum:'Cum Laude' };
+      const c = { summa:'var(--summa)', magna:'var(--magna)', cum:'var(--cum)' };
+      honorText = s[honorLabel.tier]; honorColor = c[honorLabel.tier];
+    } else { honorText = 'None'; honorColor = 'var(--red)'; }
+  }
+
+  grid.innerHTML = `
+    <div class="overview-card"><div class="ov-label">Overall GWA</div><div class="ov-val" style="color:${gwa!==null?(gwa<=1.75?'var(--green)':gwa<=2.5?'var(--gold)':'var(--red)'):'var(--muted)'}">${gwa!==null?gwa.toFixed(3):'—'}</div></div>
+    <div class="overview-card"><div class="ov-label">Honor Status</div><div class="ov-val" style="color:${honorColor};font-size:0.85rem">${honorText}</div></div>
+    <div class="overview-card"><div class="ov-label">Grades Entered</div><div class="ov-val" style="color:var(--accent2)">${entered}/${total}</div></div>
+    <div class="overview-card"><div class="ov-label">Semesters</div><div class="ov-val" style="color:var(--muted)">${extractedData.semesters.length}</div></div>`;
+}
+
+// ─── FINAL JUDGMENT BANNER ────────────────────────────────────────────────────
+const MESSAGES = {
+  summa: { emoji:'🏆', title:'SUMMA CUM LAUDE!', quote:'"Excellence is not a destination but a continuous journey. You have walked it flawlessly. The highest honor belongs to you — you earned every single point of it. Congratulations, graduate!"' },
+  magna: { emoji:'🥇', title:'MAGNA CUM LAUDE!', quote:'"You didn\'t just study — you mastered. With brilliance and dedication, you\'ve placed yourself among the very best. Wear this honor proudly, because you deserve every bit of it. Congratulations!"' },
+  cum:   { emoji:'🎓', title:'CUM LAUDE!', quote:'"With honors, with heart, and with hard work — you crossed the finish line shining. Cum Laude is not just a title; it\'s proof of your commitment through every semester. Congratulations, honor graduate!"' },
+  dist_highest: { emoji:'🏅', title:'WITH HIGHEST HONORS!', quote:'"Academic Distinction — With Highest Honors. Your GWA tells the story of a brilliant student. Keep pushing forward; your dedication speaks volumes. Congratulations!"' },
+  dist_high:    { emoji:'🏅', title:'WITH HIGH HONORS!', quote:'"Academic Distinction — With High Honors. Your hard work shines through your grades. One subject stood in the way, but this recognition is still a testament to your excellence. Congratulations!"' },
+  dist_honors:  { emoji:'🏅', title:'WITH HONORS!', quote:'"Academic Distinction — With Honors. You gave it everything across all your years. This recognition is real, this achievement is yours, and no one can take that away. Congratulations!"' },
+  none: { emoji:'💪', title:'YOU MADE IT!', quote:'"Graduating is no small feat. Not everyone who starts, finishes — but you did. The world doesn\'t only belong to honor graduates; it belongs to those who show up, persist, and never give up. Your story isn\'t over — it\'s just beginning. Congratulations, graduate!"' }
+};
+
+function showFinalBanner(gwa, hasFailed, hasDisqualifying, honorLabel) {
+  let msgKey = 'none', bannerClass = 'none-banner', honorText = 'Bachelor of Industrial Technology — Computer Technology', gwaColor = 'var(--text)';
+
+  if (gwa !== null && !hasFailed) {
+    if (!hasDisqualifying && honorLabel) {
+      msgKey = honorLabel.tier;
+      bannerClass = honorLabel.tier + '-banner';
+      honorText = honorLabel.latin;
+      gwaColor = { summa:'var(--summa)', magna:'var(--magna)', cum:'var(--cum)' }[honorLabel.tier];
+    } else if (hasDisqualifying && honorLabel) {
+      msgKey = 'dist_' + (honorLabel.tier === 'summa' ? 'highest' : honorLabel.tier === 'magna' ? 'high' : 'honors');
+      bannerClass = 'dist-banner';
+      honorText = 'Academic Distinction — ' + (honorLabel.tier === 'summa' ? 'With Highest Honors' : honorLabel.tier === 'magna' ? 'With High Honors' : 'With Honors');
+      gwaColor = 'var(--gold2)';
+    }
+  }
+
+  const msg = MESSAGES[msgKey];
+  document.getElementById('judgment-banner').className = 'judgment-banner ' + bannerClass;
+  document.getElementById('banner-emoji').textContent = msg.emoji;
+  document.getElementById('banner-title').textContent = msg.title;
+  document.getElementById('banner-honor').textContent = honorText;
+  document.getElementById('banner-honor').style.color = gwaColor;
+  document.getElementById('banner-gwa-val').textContent = gwa !== null ? gwa.toFixed(4) : '—';
+  document.getElementById('banner-gwa-val').style.color = gwaColor;
+
+  let deansCount = 0;
+  extractedData.semesters.forEach(sem => { if (checkDeansEligibility(sem.subjects).qualified) deansCount++; });
+  document.getElementById('banner-deans-val').textContent = `${deansCount}/${extractedData.semesters.length}`;
+  document.getElementById('banner-deans-msg').innerHTML = deansCount > 0
+    ? `<span style="color:var(--gold2)">⭐</span> Dean's List achiever in ${deansCount} of ${extractedData.semesters.length} semester${deansCount > 1 ? 's' : ''}`
+    : `<span style="color:var(--muted)">No Dean's List this run — but you finished strong. That counts.</span>`;
+  document.getElementById('banner-quote').textContent = msg.quote;
+
+  document.getElementById('judgment-overlay').classList.add('show');
+  if (msgKey !== 'none') spawnConfetti();
+}
+
+function dismissBanner() {
+  document.getElementById('judgment-overlay').classList.remove('show');
+  document.getElementById('confetti-wrap').classList.add('hide');
+}
+
+function spawnConfetti() {
+  const wrap = document.getElementById('confetti-wrap');
+  wrap.classList.remove('hide'); wrap.innerHTML = '';
+  const colors = ['#a78bfa','#60a5fa','#34d399','#fcd34d','#f87171','#fb923c','#e879f9'];
+  for (let i = 0; i < 80; i++) {
+    const p = document.createElement('div');
+    p.className = 'confetti-piece';
+    p.style.cssText = `left:${Math.random()*100}vw;background:${colors[~~(Math.random()*colors.length)]};animation-duration:${2+Math.random()*3}s;animation-delay:${Math.random()*1.5}s;width:${6+Math.random()*6}px;height:${6+Math.random()*6}px;border-radius:${Math.random()>0.5?'50%':'2px'}`;
+    wrap.appendChild(p);
+  }
+  setTimeout(() => wrap.classList.add('hide'), 6000);
+}
+
+// ─── HELPERS ─────────────────────────────────────────────────────────────────
+function getOrdinal(n) { return n === 1 ? '1st' : n === 2 ? '2nd' : n === 3 ? '3rd' : n + 'th'; }
+
+// ─── MANUAL INPUT ─────────────────────────────────────────────────────────────
+const BITCT_SEMESTERS = [
+  { label: '1st Semester SY 2023-2024', year:1, sem:1, subjects:[
+    {code:'GEC-PC', desc:'Purposive Communication', units:3},
+    {code:'GEC-STS', desc:'Science, Technology and Society', units:3},
+    {code:'GEC-US', desc:'Understanding the Self', units:3},
+    {code:'DRAW 111', desc:'Fundamentals of Technical Drawing and Sketching', units:1},
+    {code:'COMPTECH 111', desc:'Computer Electronics', units:7},
+    {code:'AST 111', desc:'Fundamentals of Electrical and Electronics', units:3},
+    {code:'PATHFIT 1', desc:'Physical Activities Towards Health and Fitness 1', units:2},
+    {code:'NSTP 1', desc:'National Service Training Program 1', units:3, nstp:true},
+  ]},
+  { label: '2nd Semester SY 2023-2024', year:1, sem:2, subjects:[
+    {code:'CompTech 122', desc:'Computer Systems', units:7},
+    {code:'DRAW 122', desc:'Advanced Technical Drawing and Blueprint Reading', units:1},
+    {code:'COMP 1', desc:'Office Productivity Application Software', units:3},
+    {code:'AST 122', desc:'Digital Electronics', units:3},
+    {code:'GEC-RPH', desc:'Readings in Philippine History', units:3},
+    {code:'GEC-E', desc:'Ethics', units:3},
+    {code:'PATHFIT 2', desc:'Physical Activities Towards Health and Fitness 2', units:2},
+    {code:'NSTP 2', desc:'National Service Training Program 2', units:3, nstp:true},
+  ]},
+  { label: '1st Semester SY 2024-2025', year:2, sem:1, subjects:[
+    {code:'GEC-TCW', desc:'The Contemporary World', units:3},
+    {code:'GEC-AA', desc:'Art Appreciation', units:3},
+    {code:'GEE-LIE', desc:'Living in the IT Era', units:3},
+    {code:'COMPTECH 213', desc:'Computer Network and Security', units:7},
+    {code:'CTC 211', desc:'Fundamentals of Programming', units:2},
+    {code:'DRAW 213', desc:'Computer-Aided Design 1 (CAD 1)', units:1},
+    {code:'AST 213', desc:'Basic Pneumatics / Hydraulics', units:1},
+    {code:'PATHFIT 3', desc:'Physical Activities Towards Health and Fitness 3', units:2},
+  ]},
+  { label: '2nd Semester SY 2024-2025', year:2, sem:2, subjects:[
+    {code:'COMPTECH 224', desc:'Programming', units:7},
+    {code:'CTC 222', desc:'Programming Logic and Design', units:1},
+    {code:'CTC 223', desc:'Logic Circuits', units:1},
+    {code:'DRAW 224', desc:'Computer-Aided Design 2 (CAD 2)', units:1},
+    {code:'AST 224', desc:'Programmable Logic Controller', units:1},
+    {code:'GEE-ES', desc:'Environmental Science', units:3},
+    {code:'GEC-MMW', desc:'Mathematics in the Modern World', units:3},
+    {code:'PATHFIT 4', desc:'Physical Activities Towards Health and Fitness 4', units:2},
+  ]},
+  { label: '1st Semester SY 2025-2026', year:3, sem:1, subjects:[
+    {code:'AST 315', desc:'Workshop Management', units:3},
+    {code:'GEE-FE', desc:'Functional English', units:3},
+    {code:'IM 311', desc:'Fundamentals of Research', units:3},
+    {code:'IM 312', desc:'Industrial Psychology and Group Dynamics', units:3},
+    {code:'IM 313', desc:'Occupational Safety and Health', units:3},
+    {code:'IM 314', desc:'Shop Supervision and Apprenticeship Training', units:3},
+    {code:'COMPTECH 315', desc:'Microprocessor Systems', units:7},
+    {code:'FOLA 1', desc:'Foreign Language 1', units:3},
+  ]},
+  { label: '2nd Semester SY 2025-2026', year:3, sem:2, subjects:[
+    {code:'CompTech 326', desc:'Embedded Systems', units:7},
+    {code:'IM 325', desc:'Industrial Organization and Management', units:3},
+    {code:'IM 326', desc:'Personnel Administration', units:3},
+    {code:'IM 327', desc:'Organizational Behavior and Work Ethics', units:3},
+    {code:'IM 328', desc:'Product Output (Research)', units:3},
+    {code:'AST 326', desc:'Emerging Technologies', units:3},
+    {code:'GEC-LWR', desc:'Life and Works of Rizal', units:3},
+    {code:'FOLA 2', desc:'Foreign Language 2', units:3},
+    {code:'GEE-TEM', desc:'The Entrepreneurial Mind', units:3},
+  ]},
+  { label: '1st Semester SY 2026-2027', year:4, sem:1, subjects:[
+    {code:'', desc:'', units:3},
+    {code:'', desc:'', units:3},
+    {code:'', desc:'', units:3},
+  ]},
+  { label: '2nd Semester SY 2026-2027', year:4, sem:2, subjects:[
+    {code:'', desc:'', units:3},
+    {code:'', desc:'', units:3},
+    {code:'', desc:'', units:3},
+  ]},
+];
+
+let currentProgram = 'bitct';
+let manualSemIdx = 0;
+let otherSemesters = [
+  { label:'Semester 1', year:1, sem:1, subjects:[{code:'',desc:'',units:3},{code:'',desc:'',units:3},{code:'',desc:'',units:3}] },
+];
+
+function selectProgram(prog) {
+  currentProgram = prog;
+  document.getElementById('prog-bitct').classList.toggle('active', prog==='bitct');
+  document.getElementById('prog-other').classList.toggle('active', prog==='other');
+  manualSemIdx = 0;
+  renderManualForm();
+}
+
+function renderManualForm() {
+  const sems = currentProgram === 'bitct' ? BITCT_SEMESTERS : otherSemesters;
+  const wrap = document.getElementById('manual-form-wrap');
+
+  // Sem tabs
+  let tabsHtml = '<div class="manual-sem-tabs">';
+  sems.forEach((s,i) => {
+    tabsHtml += `<button class="msem-tab ${i===manualSemIdx?'active':''}" onclick="switchManualSem(${i})">${s.label.replace('Semester SY','Sem').replace('1st Sem','S1').replace('2nd Sem','S2').split(' ')[0]} ${s.label.split(' ').slice(-1)[0]}</button>`;
+  });
+  if (currentProgram === 'other') {
+    tabsHtml += `<button class="msem-tab" onclick="addManualSem()" style="border-style:dashed">+ Add Sem</button>`;
+  }
+  tabsHtml += '</div>';
+
+  // Sem panels
+  let panelsHtml = '';
+  sems.forEach((sem, si) => {
+    panelsHtml += `<div class="manual-sem-panel ${si===manualSemIdx?'show':''}" id="msem-panel-${si}">`;
+    if (currentProgram === 'other') {
+      panelsHtml += `<div style="margin-bottom:0.75rem"><input type="text" placeholder="Semester label (e.g. 1st Semester SY 2024-2025)" value="${sem.label}" onchange="updateSemLabel(${si},this.value)" style="width:100%;padding:0.55rem 0.7rem;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;font-family:'Inter',sans-serif;background:var(--surface);color:var(--text)"></div>`;
+    } else {
+      panelsHtml += `<div class="manual-sem-header">${sem.label}</div>`;
+    }
+    if (currentProgram === 'bitct') {
+      panelsHtml += `<div class="manual-col-headers" style="grid-template-columns:1fr 60px 90px"><span>Subject Code &amp; Descriptive Title</span><span style="text-align:center">Units</span><span style="text-align:center">Grade (1.0–5.0)</span></div>`;
+    } else {
+      panelsHtml += `<div class="manual-col-headers" style="grid-template-columns:1fr 70px 90px 30px"><span>Descriptive Title</span><span>Units</span><span>Grade</span><span></span></div>`;
+    }
+    sem.subjects.forEach((s, ri) => {
+      const isNstp = s.nstp || (s.code && s.code.toUpperCase().includes('NSTP'));
+      panelsHtml += `<div class="manual-subj-row" id="mrow-${si}-${ri}">`;
+      if (currentProgram === 'bitct') {
+        panelsHtml += `<div style="font-size:0.83rem;color:${isNstp?'var(--muted)':'var(--text)'}"><span style="font-family:'JetBrains Mono',monospace;font-size:0.72rem;color:var(--accent);background:rgba(29,78,216,0.07);padding:0.15rem 0.4rem;border-radius:3px;border:1px solid rgba(29,78,216,0.15);margin-right:0.4rem">${s.code}</span>${s.desc}${isNstp?' <em style="font-size:0.68rem;color:var(--muted)">(excl. from GWA)</em>':''}</div>`;
+        panelsHtml += `<div style="font-size:0.85rem;color:var(--muted);text-align:center">${s.units}</div>`;
+      } else {
+        panelsHtml += `<input type="text" placeholder="Subject name" value="${s.desc}" onchange="updateManualSubj(${si},${ri},'desc',this.value)">`;
+        panelsHtml += `<input type="number" placeholder="Units" value="${s.units||''}" min="1" max="9" onchange="updateManualSubj(${si},${ri},'units',parseFloat(this.value)||3)">`;
+      }
+      if (isNstp) {
+        panelsHtml += `<div style="font-size:0.75rem;color:var(--muted);text-align:center;padding:0.55rem 0.7rem">excluded</div>`;
+      } else {
+        panelsHtml += `<input type="number" placeholder="e.g. 1.5" step="0.1" min="1.0" max="5.0" value="${s.grade!==undefined&&s.grade!==null?s.grade:''}" onchange="updateManualGrade(${si},${ri},this.value)" oninput="updateManualGrade(${si},${ri},this.value)" id="mgrade-${si}-${ri}">`;
+      }
+      if (currentProgram === 'other') {
+        panelsHtml += `<button class="remove-subj-btn" onclick="removeManualSubj(${si},${ri})">×</button>`;
+      }
+      panelsHtml += `</div>`;
+    });
+    if (currentProgram === 'other') {
+      panelsHtml += `<button class="add-subj-btn" onclick="addManualSubj(${si})">+ Add Subject</button>`;
+    }
+    if (currentProgram === 'bitct') {
+      panelsHtml += `<p class="nstp-note">💡 NSTP subjects are automatically excluded from GWA computation.</p>`;
+    }
+    panelsHtml += `</div>`;
+  });
+
+  wrap.innerHTML = tabsHtml + panelsHtml;
+}
+
+function switchManualSem(idx) {
+  manualSemIdx = idx;
+  renderManualForm();
+}
+
+function updateManualGrade(si, ri, val) {
+  const sems = currentProgram === 'bitct' ? BITCT_SEMESTERS : otherSemesters;
+  const parsed = parseFloat(val);
+  sems[si].subjects[ri].grade = isNaN(parsed) ? null : parsed;
+}
+
+function updateManualSubj(si, ri, field, val) {
+  const sems = otherSemesters;
+  sems[si].subjects[ri][field] = val;
+}
+
+function updateSemLabel(si, val) {
+  otherSemesters[si].label = val;
+}
+
+function addManualSubj(si) {
+  otherSemesters[si].subjects.push({code:'', desc:'', units:3, grade:null});
+  renderManualForm();
+}
+
+function removeManualSubj(si, ri) {
+  otherSemesters[si].subjects.splice(ri, 1);
+  renderManualForm();
+}
+
+function addManualSem() {
+  const n = otherSemesters.length + 1;
+  otherSemesters.push({label:`Semester ${n}`, year:Math.ceil(n/2), sem:((n-1)%2)+1, subjects:[
+    {code:'',desc:'',units:3,grade:null},
+    {code:'',desc:'',units:3,grade:null},
+    {code:'',desc:'',units:3,grade:null},
+  ]});
+  manualSemIdx = otherSemesters.length - 1;
+  renderManualForm();
+}
+
+function clearManualForm() {
+  if (currentProgram === 'bitct') {
+    BITCT_SEMESTERS.forEach(sem => sem.subjects.forEach(s => { if (!s.nstp) s.grade = null; }));
+  } else {
+    otherSemesters = [{ label:'Semester 1', year:1, sem:1, subjects:[{code:'',desc:'',units:3},{code:'',desc:'',units:3},{code:'',desc:'',units:3}] }];
+    manualSemIdx = 0;
+  }
+  renderManualForm();
+}
+
+function submitManualGrades() {
+  const sems = currentProgram === 'bitct' ? BITCT_SEMESTERS : otherSemesters;
+
+  // Build extractedData from manual input
+  const builtSems = sems.map(sem => ({
+    label: sem.label,
+    year: sem.year,
+    sem: sem.sem,
+    subjects: sem.subjects
+      .filter(s => s.desc || s.code)
+      .map(s => ({
+        code: s.code || '—',
+        desc: s.desc || 'Unnamed Subject',
+        units: parseFloat(s.units) || 3,
+        grade: s.grade !== undefined && s.grade !== null && s.grade !== '' ? parseFloat(s.grade) : null,
+        nstp: s.nstp || (s.code && s.code.toUpperCase().includes('NSTP')) || false,
+      }))
+  })).filter(sem => sem.subjects.length > 0);
+
+  if (builtSems.length === 0) {
+    alert('Please enter at least one subject before calculating.');
+    return;
+  }
+
+  extractedData = {
+    studentName: currentProgram === 'bitct' ? 'CTU BIT-CT Student' : 'Student',
+    studentNo: null,
+    program: currentProgram === 'bitct' ? 'BIT-CT' : 'Other',
+    semesters: builtSems,
+  };
+
+  try { localStorage.setItem('ctu_grades', JSON.stringify(extractedData)); } catch(e) {}
+  document.getElementById('restore-notice').style.display = 'none';
+  showQuerySection();
+}
+
+
+function exportGWACard() {
+  const gwa = computeOverallGWA();
+  if (!gwa) { alert('No grades to export yet. Calculate your GWA first.'); return; }
+
+  const honor = getHonorLabel(gwa);
+  const honorText = honor ? honor.latin : 'No Latin Honor';
+  const deansCount = extractedData.semesters.filter(s => checkDeansEligibility(s.subjects).qualified).length;
+  const totalSems = extractedData.semesters.length;
+  const name = extractedData.studentName || '';
+  const program = extractedData.program || '';
+
+  // Draw on canvas
+  const W = 800, H = 480;
+  const canvas = document.createElement('canvas');
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext('2d');
+
+  // Background
+  const bg = ctx.createLinearGradient(0, 0, W, H);
+  if (honor) {
+    if (honor.tier === 'summa') { bg.addColorStop(0,'#1a0d3d'); bg.addColorStop(1,'#0f1729'); }
+    else if (honor.tier === 'magna') { bg.addColorStop(0,'#0d1f3d'); bg.addColorStop(1,'#0f1729'); }
+    else { bg.addColorStop(0,'#0d2d22'); bg.addColorStop(1,'#0f1729'); }
+  } else {
+    bg.addColorStop(0,'#111827'); bg.addColorStop(1,'#0a0e1a');
+  }
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, W, H);
+
+  // Accent border top
+  const accentColor = honor ? (honor.tier==='summa'?'#a78bfa':honor.tier==='magna'?'#60a5fa':'#34d399') : '#64748b';
+  ctx.fillStyle = accentColor;
+  ctx.fillRect(0, 0, W, 4);
+
+  // School badge
+  ctx.fillStyle = 'rgba(255,255,255,0.1)';
+  roundRect(ctx, 24, 24, 220, 32, 6);
+  ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,0.6)';
+  ctx.font = '500 13px Inter, sans-serif';
+  ctx.fillText('CTU Carmen Campus · ' + (program || 'BIT-CT'), 36, 45);
+
+  // GWA label
+  ctx.fillStyle = 'rgba(255,255,255,0.45)';
+  ctx.font = '600 12px Inter, sans-serif';
+  ctx.letterSpacing = '2px';
+  ctx.fillText('OVERALL GWA', 40, 110);
+
+  // GWA value
+  ctx.fillStyle = accentColor;
+  ctx.font = 'bold 80px Inter, sans-serif';
+  ctx.fillText(gwa.toFixed(4), 36, 200);
+
+  // Honor
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 28px Inter, sans-serif';
+  ctx.fillText(honorText.toUpperCase(), 40, 248);
+
+  // Divider
+  ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(40, 270); ctx.lineTo(W-40, 270); ctx.stroke();
+
+  // Stats row
+  ctx.fillStyle = 'rgba(255,255,255,0.4)';
+  ctx.font = '600 11px Inter, sans-serif';
+  ctx.fillText=="DEAN'S LIST";
+  ctx.fillText("DEAN'S LIST", 40, 300);
+  ctx.fillText('SEMESTERS', 220, 300);
+  ctx.fillText('STUDENT', 400, 300);
+
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 22px Inter, sans-serif';
+  ctx.fillText(deansCount + '/' + totalSems + ' sems', 40, 330);
+  ctx.fillText(totalSems + ' total', 220, 330);
+  ctx.font = '16px Inter, sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,0.7)';
+  ctx.fillText(name || 'Student', 400, 330);
+
+  // Footer
+  ctx.fillStyle = 'rgba(255,255,255,0.25)';
+  ctx.font = '12px Inter, sans-serif';
+  ctx.fillText('Generated by CTU Grade Calculator · sulibraymar-collab.github.io', 40, H-24);
+
+  // Download
+  const link = document.createElement('a');
+  link.download = 'gwa-card-' + (name||'student').replace(/[^a-z0-9]/gi,'_').toLowerCase() + '.png';
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x+r, y);
+  ctx.lineTo(x+w-r, y);
+  ctx.quadraticCurveTo(x+w, y, x+w, y+r);
+  ctx.lineTo(x+w, y+h-r);
+  ctx.quadraticCurveTo(x+w, y+h, x+w-r, y+h);
+  ctx.lineTo(x+r, y+h);
+  ctx.quadraticCurveTo(x, y+h, x, y+h-r);
+  ctx.lineTo(x, y+r);
+  ctx.quadraticCurveTo(x, y, x+r, y);
+  ctx.closePath();
+}
+
+</script>
+</body>
+</html>
